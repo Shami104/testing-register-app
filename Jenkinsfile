@@ -8,7 +8,7 @@ pipeline {
 	    APP_NAME = "register-app-pipeline"
             RELEASE = "1.0.0"
             DOCKER_USER = "shami475"
-            DOCKER_PASS = 'shamitha@23'
+            DOCKER_PASS = 'credentials('shamitha@23')
             IMAGE_NAME = "${DOCKER_USER}" + "/" + "${APP_NAME}"
             IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
 	    JENKINS_API_TOKEN = credentials("JENKINS_API_TOKEN")
@@ -61,11 +61,11 @@ pipeline {
         stage("Build & Push Docker Image") {
             steps {
                 script {
-                    docker.withRegistry('',DOCKER_PASS) {
+                    docker.withRegistry('https://index.docker.io/v1/',DOCKER_CREDENTIAL_ID) {
                         docker_image = docker.build "${IMAGE_NAME}"
                     }
 
-                    docker.withRegistry('',DOCKER_PASS) {
+                    docker.withRegistry('',DOCKER_CREDENTIAL_ID) {
                         docker_image.push("${IMAGE_TAG}")
                         docker_image.push('latest')
                     }
@@ -77,7 +77,8 @@ pipeline {
        stage("Trivy Scan") {
            steps {
                script {
-	            sh ('docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image shami475/register-app-pipeline:latest --no-progress --scanners vuln  --exit-code 0 --severity HIGH,CRITICAL --format table')
+	            sh ('docker run --rm -v /var/run/docker.sock:/var/run/docker.sock\aquasec/trivy image ${IMAGE_NAME}:latest \severity HIGH,CRITICAL \exit-code 1')
+
                }
            }
        }
